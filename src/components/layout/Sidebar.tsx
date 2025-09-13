@@ -9,7 +9,8 @@ import {
   BarChart3,
   Settings,
   UserCheck,
-  LogOut
+  LogOut,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -20,6 +21,7 @@ const menuItems = [
   { icon: Users, label: 'User Management', id: 'users' },
   { icon: Package, label: 'Products & Offers', id: 'products' },
   { icon: MessageSquare, label: 'Reviews & Ratings', id: 'reviews' },
+  { icon: Activity, label: 'Activity Feed', id: 'activity' },
   { icon: Bell, label: 'Notifications', id: 'notifications' },
   { icon: BarChart3, label: 'Analytics', id: 'analytics' },
   { icon: Settings, label: 'System Config', id: 'settings' }

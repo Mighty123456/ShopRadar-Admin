@@ -209,6 +209,26 @@ class ApiService {
     return { success: false, message: data.message || 'Failed to fetch user stats' };
   }
 
+  async getActiveUsers(timeframe: string = '24h', page: number = 1, limit: number = 50) {
+    const params = new URLSearchParams({
+      timeframe,
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    const response = await fetch(`${API_BASE_URL}/users/admin/active?${params}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      return { success: true, data: data.data };
+    }
+    
+    return { success: false, message: data.message || 'Failed to fetch active users' };
+  }
+
   // Logout
   logout() {
     localStorage.removeItem('adminToken');

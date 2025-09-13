@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Users, Store, Package, Star, RefreshCw, AlertCircle } from 'lucide-react';
 import apiService from '../../services/apiService';
+import { ActiveUsers } from '../users/ActiveUsers';
 
 const chartData = [
   { month: 'Jan', users: 1200, shops: 85 },
@@ -237,6 +238,9 @@ export const AnalyticsDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Active Users Section */}
+      <ActiveUsers />
     </div>
   );
 };

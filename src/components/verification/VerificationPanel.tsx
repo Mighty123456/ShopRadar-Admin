@@ -31,7 +31,7 @@ export const VerificationPanel: React.FC = () => {
           status: shop.verificationStatus,
           verificationStatus: shop.verificationStatus,
           registrationDate: new Date(shop.createdAt).toLocaleDateString(),
-          licenseDocument: shop.licenseFile?.originalName,
+          licenseDocument: shop.licenseDocument?.url,
           licenseNumber: shop.licenseNumber,
           phone: shop.phone,
           state: shop.state,
@@ -101,7 +101,6 @@ export const VerificationPanel: React.FC = () => {
     }
   };
 
-  const pendingShops = shops.filter(shop => shop.verificationStatus === 'pending');
 
   return (
     <div className="space-y-6">
@@ -285,11 +284,19 @@ export const VerificationPanel: React.FC = () => {
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Business License</label>
                 <div className="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{selectedShop.licenseDocument}</span>
-                  <button className="flex items-center text-blue-600 hover:text-blue-700">
+                  <div className="flex-1">
+                    <span className="text-sm text-gray-600 block">License Document</span>
+                    <span className="text-xs text-gray-500">Click to view/download</span>
+                  </div>
+                  <a 
+                    href={selectedShop.licenseDocument} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center text-blue-600 hover:text-blue-700"
+                  >
                     <Download className="h-4 w-4 mr-1" />
-                    Download
-                  </button>
+                    View/Download
+                  </a>
                 </div>
               </div>
             )}

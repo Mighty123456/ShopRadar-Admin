@@ -10,6 +10,7 @@ interface StatsData {
   activeShops: number;
   liveShops: number;
   recentRegistrations: number;
+  activeUsers?: number;
 }
 
 export const RealStatsCard: React.FC = () => {
@@ -25,12 +26,19 @@ export const RealStatsCard: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const result = await apiService.getShopStats();
       
-      if (result.success) {
-        setStats(result.stats);
+      const [shopStatsResult, userStatsResult] = await Promise.all([
+        apiService.getShopStats(),
+        apiService.getUserStats()
+      ]);
+      
+      if (shopStatsResult.success && userStatsResult.success) {
+        setStats({
+          ...shopStatsResult.stats,
+          activeUsers: userStatsResult.stats.totalUsers
+        });
       } else {
-        setError(result.message);
+        setError('Failed to load statistics');
       }
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -42,8 +50,8 @@ export const RealStatsCard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(7)].map((_, i) => (
           <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-pulse">
             <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
             <div className="h-8 bg-gray-200 rounded w-1/2"></div>
@@ -129,11 +137,20 @@ export const RealStatsCard: React.FC = () => {
       bgColor: 'bg-indigo-50',
       textColor: 'text-indigo-600',
       iconColor: 'text-indigo-500'
+    },
+    {
+      title: 'Total Users',
+      value: stats.activeUsers || 0,
+      icon: Users,
+      color: 'emerald',
+      bgColor: 'bg-emerald-50',
+      textColor: 'text-emerald-600',
+      iconColor: 'text-emerald-500'
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {statsCards.map((stat, index) => {
         const IconComponent = stat.icon;
         return (

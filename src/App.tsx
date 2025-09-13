@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { RealStatsCard } from './components/dashboard/RealStatsCard';
 import { RecentActivity } from './components/dashboard/RecentActivity';
+import { ScrollableActivity } from './components/dashboard/ScrollableActivity';
 import { VerificationPanel } from './components/verification/VerificationPanel';
 import { UserManagement } from './components/users/UserManagement';
+import { ActiveUsers } from './components/users/ActiveUsers';
+import { ActivityFeed } from './components/activity/ActivityFeed';
 import { ProductMonitoring } from './components/products/ProductMonitoring';
 import { ReviewModeration } from './components/reviews/ReviewModeration';
 import { NotificationManager } from './components/notifications/NotificationManager';
@@ -84,6 +87,8 @@ function App() {
         return <NotificationManager />;
       case 'analytics':
         return <AnalyticsDashboard />;
+      case 'activity':
+        return <ActivityFeed />;
       case 'settings':
         return <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">System Configuration</h2>
@@ -135,8 +140,13 @@ function App() {
               </div>
               
               <div className="lg:col-span-1">
-                <RecentActivity />
+                <ScrollableActivity />
               </div>
+            </div>
+            
+            {/* Active Users Section */}
+            <div className="mt-8">
+              <ActiveUsers />
             </div>
           </div>
         );
@@ -153,6 +163,7 @@ function App() {
             { id: 'users', label: 'Users' },
             { id: 'products', label: 'Products' },
             { id: 'reviews', label: 'Reviews' },
+            { id: 'activity', label: 'Activity' },
             { id: 'notifications', label: 'Notifications' },
             { id: 'analytics', label: 'Analytics' }
           ].map((tab) => (
