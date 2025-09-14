@@ -85,3 +85,33 @@ export interface Notification {
   createdDate: string;
   sentDate?: string;
 }
+
+export interface Offer {
+  _id: string;
+  title: string;
+  description: string;
+  discountType: 'Percentage' | 'Fixed Amount';
+  discountValue: number;
+  startDate: string;
+  endDate: string;
+  maxUses: number;
+  currentUses: number;
+  status: 'active' | 'inactive' | 'suspended';
+  productId: {
+    _id: string;
+    name: string;
+    category: string;
+    price: number;
+    stock: number;
+  };
+  shopId: {
+    _id: string;
+    shopName: string;
+    phone: string;
+    address: string;
+    state: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  adminNotes?: string;
+}

@@ -33,6 +33,7 @@ interface Activity {
   shop?: {
     id: string;
     name: string;
+    shopName?: string;
     licenseNumber: string;
   };
   admin?: {
@@ -398,7 +399,7 @@ export const ScrollableActivity: React.FC = () => {
                         )}
                         {activity.shop && (
                           <span className="text-xs text-gray-500">
-                            Shop: {activity.shop.name}
+                            Shop: {activity.shop.shopName || activity.shop.name || 'Unknown Shop'}
                           </span>
                         )}
                       </div>

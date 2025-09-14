@@ -540,6 +540,74 @@ class ApiService {
     return { success: false, message: data.message || 'Failed to fetch notification statistics' };
   }
 
+  // Offer Management
+  async getAllOffers(page: number = 1, limit: number = 10, filters?: any) {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.shopId) params.append('shopId', filters.shopId);
+    if (filters?.search) params.append('search', filters.search);
+
+    const response = await fetch(`${API_BASE_URL}/offers/admin/all?${params}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      return { success: true, data: data.data };
+    }
+    
+    return { success: false, message: data.message || 'Failed to fetch offers' };
+  }
+
+  async getOfferById(offerId: string) {
+    const response = await fetch(`${API_BASE_URL}/offers/admin/${offerId}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      return { success: true, data: data.data };
+    }
+    
+    return { success: false, message: data.message || 'Failed to fetch offer' };
+  }
+
+  async updateOfferStatus(offerId: string, status: string, notes?: string) {
+    const response = await fetch(`${API_BASE_URL}/offers/admin/${offerId}/status`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ status, notes }),
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      return { success: true, message: data.message };
+    }
+    
+    return { success: false, message: data.message || 'Failed to update offer status' };
+  }
+
+  async getOfferStats() {
+    const response = await fetch(`${API_BASE_URL}/offers/admin/stats`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      return { success: true, data: data.data };
+    }
+    
+    return { success: false, message: data.message || 'Failed to fetch offer statistics' };
+  }
+
   // Check if admin is authenticated
   isAuthenticated() {
     return !!localStorage.getItem('adminToken');

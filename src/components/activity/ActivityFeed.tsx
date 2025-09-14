@@ -14,7 +14,6 @@ import {
   Filter,
   Search,
   Download,
-  Calendar,
   TrendingUp,
   Users,
   AlertCircle
@@ -38,6 +37,7 @@ interface Activity {
   shop?: {
     id: string;
     name: string;
+    shopName?: string;
     licenseNumber: string;
   };
   admin?: {
@@ -520,7 +520,7 @@ export const ActivityFeed: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredActivities.map((activity, index) => {
+                {filteredActivities.map((activity) => {
                   const IconComponent = getActivityIcon(activity.type);
                   const color = getActivityColor(activity.severity, activity.status);
                   const severityBadge = getSeverityBadge(activity.severity);
@@ -557,7 +557,7 @@ export const ActivityFeed: React.FC = () => {
                           {activity.shop && (
                             <span className="flex items-center">
                               <Store className="h-3 w-3 mr-1" />
-                              {activity.shop.name}
+                              {activity.shop.shopName || activity.shop.name || 'Unknown Shop'}
                             </span>
                           )}
                         </div>
