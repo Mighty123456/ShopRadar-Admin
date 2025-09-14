@@ -67,10 +67,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('Logout initiated');
     apiService.logout();
     localStorage.removeItem('adminUser');
     setIsAuthenticated(false);
     setUser(null);
+    console.log('Logout completed');
   };
 
   const value = {

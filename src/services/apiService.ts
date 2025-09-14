@@ -551,11 +551,16 @@ class ApiService {
     if (filters?.shopId) params.append('shopId', filters.shopId);
     if (filters?.search) params.append('search', filters.search);
 
+    console.log('Fetching offers with params:', params.toString());
+    console.log('API URL:', `${API_BASE_URL}/offers/admin/all?${params}`);
+
     const response = await fetch(`${API_BASE_URL}/offers/admin/all?${params}`, {
       headers: this.getAuthHeaders(),
     });
 
+    console.log('Offers response status:', response.status);
     const data = await response.json();
+    console.log('Offers response data:', data);
     
     if (response.ok) {
       return { success: true, data: data.data };

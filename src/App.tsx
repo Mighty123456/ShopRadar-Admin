@@ -33,16 +33,20 @@ function App() {
 
   // Initialize WebSocket connection when authenticated
   useEffect(() => {
+    console.log('WebSocket useEffect triggered, isAuthenticated:', isAuthenticated);
     if (isAuthenticated) {
       const token = localStorage.getItem('adminToken');
       if (token) {
+        console.log('Connecting WebSocket...');
         websocketService.connect(token);
       }
     } else {
+      console.log('Disconnecting WebSocket due to logout...');
       websocketService.disconnect();
     }
 
     return () => {
+      console.log('WebSocket cleanup on unmount');
       websocketService.disconnect();
     };
   }, [isAuthenticated]);

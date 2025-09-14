@@ -49,6 +49,7 @@ export const ProductMonitoring: React.FC = () => {
 
   const loadOffers = async () => {
     try {
+      console.log('Loading offers...');
       setLoading(true);
       setError(null);
       
@@ -57,25 +58,33 @@ export const ProductMonitoring: React.FC = () => {
         search: debouncedSearch
       });
       
+      console.log('Offers result:', result);
+      
       if (result.success) {
+        console.log('Offers data:', result.data);
         setOffers(result.data.offers);
         setTotalPages(result.data.pagination.totalPages);
         setTotalOffers(result.data.pagination.totalOffers);
+        console.log('Set offers:', result.data.offers);
       } else {
+        console.error('Failed to load offers:', result.message);
         setError(result.message);
       }
     } catch (err) {
-      setError('Failed to load offers');
       console.error('Error loading offers:', err);
+      setError('Failed to load offers');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log('useEffect triggered, activeTab:', activeTab);
     if (activeTab === 'products') {
+      console.log('Loading products...');
       loadProducts();
     } else {
+      console.log('Loading offers...');
       loadOffers();
     }
   }, [currentPage, filters.category, filters.status, debouncedSearch, activeTab]);
@@ -157,6 +166,7 @@ export const ProductMonitoring: React.FC = () => {
           </button>
           <button
             onClick={() => {
+              console.log('Offers tab clicked');
               setActiveTab('offers');
               setCurrentPage(1);
             }}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -35,6 +35,14 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
   const { logout } = useAuth();
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // Cleanup modal state on unmount
+  useEffect(() => {
+    return () => {
+      setShowConfirm(false);
+    };
+  }, []);
+
   return (
     <div className="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white">
       <div className="p-6">
@@ -73,8 +81,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
       </div>
 
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowConfirm(false)}></div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" key="logout-modal">
+          <div className="absolute inset-0 bg-black/40" onClick={() => {
+            console.log('Modal backdrop clicked');
+            setShowConfirm(false);
+          }}></div>
           <div className="relative z-10 w-[92%] max-w-sm rounded-xl bg-white p-6 shadow-xl border border-gray-200">
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center mr-3">
@@ -91,7 +102,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
                 Cancel
               </button>
               <button
-                onClick={() => { setShowConfirm(false); logout(); }}
+                onClick={() => { 
+                  console.log('Logout button clicked');
+                  setShowConfirm(false); 
+                  logout(); 
+                }}
                 className="px-4 py-2 text-sm rounded-md bg-rose-600 text-white hover:bg-rose-700"
               >
                 Logout

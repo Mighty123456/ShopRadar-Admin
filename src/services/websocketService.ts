@@ -160,10 +160,15 @@ class WebSocketService {
 
   // Disconnect WebSocket
   disconnect() {
+    console.log('WebSocket disconnect called');
     if (this.socket) {
+      console.log('Disconnecting WebSocket...');
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
+      console.log('WebSocket disconnected');
+    } else {
+      console.log('No WebSocket connection to disconnect');
     }
   }
 
