@@ -89,6 +89,11 @@ class WebSocketService {
     this.socket.on('connected', (data: any) => {
       console.log('WebSocket connection confirmed:', data);
     });
+
+    this.socket.on('stats_update', (data: { type: string; data: any; timestamp: string }) => {
+      console.log('Stats update received:', data);
+      this.handleStatsUpdate(data);
+    });
   }
 
   private attemptReconnect() {
@@ -127,6 +132,14 @@ class WebSocketService {
     // Dispatch custom event for notifications
     const event = new CustomEvent('websocket-notification', {
       detail: notification
+    });
+    window.dispatchEvent(event);
+  }
+
+  private handleStatsUpdate(data: { type: string; data: any; timestamp: string }) {
+    // Dispatch custom event for stats updates
+    const event = new CustomEvent('websocket-stats', {
+      detail: data
     });
     window.dispatchEvent(event);
   }
@@ -187,6 +200,20 @@ class WebSocketService {
     // Return unsubscribe function
     return () => {
       window.removeEventListener('websocket-notification', handler as EventListener);
+    };
+  }
+
+  // Subscribe to stats updates
+  subscribeToStatsUpdates(callback: (data: { type: string; data: any; timestamp: string }) => void) {
+    const handler = (event: CustomEvent) => {
+      callback(event.detail);
+    };
+    
+    window.addEventListener('websocket-stats', handler as EventListener);
+    
+    // Return unsubscribe function
+    return () => {
+      window.removeEventListener('websocket-stats', handler as EventListener);
     };
   }
 }

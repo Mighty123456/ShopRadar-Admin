@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { RealStatsCard } from './components/dashboard/RealStatsCard';
 import { RecentActivity } from './components/dashboard/RecentActivity';
@@ -15,6 +15,7 @@ import { LoginForm } from './components/auth/LoginForm';
 import { ForgotPassword } from './components/auth/ForgotPassword';
 import { useAuth } from './contexts/AuthContext';
 import { Users, Package, Star, UserCheck } from 'lucide-react';
+import websocketService from './services/websocketService';
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -29,6 +30,22 @@ function App() {
       setLoginError('Invalid email or password. Please try again.');
     }
   };
+
+  // Initialize WebSocket connection when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const token = localStorage.getItem('adminToken');
+      if (token) {
+        websocketService.connect(token);
+      }
+    } else {
+      websocketService.disconnect();
+    }
+
+    return () => {
+      websocketService.disconnect();
+    };
+  }, [isAuthenticated]);
 
   // Show loading screen while checking authentication
   if (isLoading) {

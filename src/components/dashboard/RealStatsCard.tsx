@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Store, Package, AlertTriangle, Star, UserCheck } from 'lucide-react';
 import apiService from '../../services/apiService';
+import { useRealTimeStats } from '../../hooks/useRealTimeStats';
 
 interface StatsData {
   totalShops: number;
@@ -14,9 +15,7 @@ interface StatsData {
 }
 
 export const RealStatsCard: React.FC = () => {
-  const [stats, setStats] = useState<StatsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { stats, setStats, loading, setLoading, error, setError } = useRealTimeStats();
 
   useEffect(() => {
     loadStats();
@@ -139,6 +138,16 @@ export const RealStatsCard: React.FC = () => {
       iconColor: 'text-indigo-500'
     },
     {
+      title: 'Total Products',
+      value: stats.totalProducts || 0,
+      icon: Package,
+      color: 'orange',
+      bgColor: 'bg-orange-50',
+      textColor: 'text-orange-600',
+      iconColor: 'text-orange-500',
+      isRealTime: true
+    },
+    {
       title: 'Total Users',
       value: stats.activeUsers || 0,
       icon: Users,
@@ -154,7 +163,15 @@ export const RealStatsCard: React.FC = () => {
       {statsCards.map((stat, index) => {
         const IconComponent = stat.icon;
         return (
-          <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+          <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow relative">
+            {stat.isRealTime && (
+              <div className="absolute top-2 right-2">
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-green-600 font-medium">Live</span>
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
