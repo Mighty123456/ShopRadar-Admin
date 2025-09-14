@@ -26,7 +26,14 @@ export interface Shop {
   status: 'pending' | 'approved' | 'rejected';
   verificationStatus: 'pending' | 'approved' | 'rejected';
   registrationDate: string;
-  licenseDocument?: string;
+  licenseDocument?: {
+    url: string;
+    publicId: string;
+    mimeType: string;
+    localPath?: string;
+    localFilename?: string;
+    uploadedAt: string;
+  };
   licenseNumber?: string;
   phone?: string;
   state?: string;
@@ -48,12 +55,24 @@ export interface Shop {
 export interface Product {
   id: string;
   name: string;
-  shop: string;
+  description?: string;
+  shop: string | {
+    id: string;
+    name: string;
+    shopName?: string;
+    licenseNumber?: string;
+    ownerId?: string;
+  };
   category: string;
   price: number;
   status: 'active' | 'removed' | 'flagged';
   reportCount: number;
   addedDate: string;
+  images?: string[];
+  reportReasons?: string[];
+  moderatedBy?: any;
+  moderationNotes?: string;
+  moderatedAt?: string;
 }
 
 export interface Review {
@@ -88,30 +107,34 @@ export interface Notification {
 
 export interface Offer {
   _id: string;
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   discountType: 'Percentage' | 'Fixed Amount';
   discountValue: number;
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
   maxUses: number;
   currentUses: number;
   status: 'active' | 'inactive' | 'suspended';
-  productId: {
+  productId?: {
     _id: string;
     name: string;
     category: string;
     price: number;
     stock: number;
+    description?: string;
   };
-  shopId: {
+  shopId?: {
     _id: string;
-    shopName: string;
-    phone: string;
-    address: string;
-    state: string;
+    name?: string;
+    shopName?: string;
+    phone?: string;
+    address?: string;
+    state?: string;
+    ownerName?: string;
+    email?: string;
   };
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
   adminNotes?: string;
 }

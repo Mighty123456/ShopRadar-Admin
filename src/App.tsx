@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AdminLayout } from './components/layout/AdminLayout';
 import { RealStatsCard } from './components/dashboard/RealStatsCard';
-import { RecentActivity } from './components/dashboard/RecentActivity';
 import { ScrollableActivity } from './components/dashboard/ScrollableActivity';
 import { VerificationPanel } from './components/verification/VerificationPanel';
 import { UserManagement } from './components/users/UserManagement';

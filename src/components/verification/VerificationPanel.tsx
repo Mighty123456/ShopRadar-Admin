@@ -3,10 +3,282 @@ import { Shop } from '../../types/admin';
 import { CheckCircle, XCircle, Eye, Download, Clock, MapPin, AlertTriangle, RefreshCw } from 'lucide-react';
 import apiService from '../../services/apiService';
 
+// Universal Document Viewer Component
+const DocumentViewer: React.FC<{ url: string }> = ({ url }) => {
+  const [viewerType, setViewerType] = useState<'iframe' | 'image' | 'google' | 'error'>('iframe');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [timeoutId, setTimeoutId] = useState<number | null>(null);
+
+  // Detect file type from URL
+  const getFileType = (url: string): string => {
+    const extension = url.split('.').pop()?.toLowerCase() || '';
+    return extension;
+  };
+
+  const fileType = getFileType(url);
+  const isImage = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(fileType);
+  const isPdf = fileType === 'pdf';
+
+  useEffect(() => {
+    console.log('DocumentViewer: URL =', url);
+    console.log('DocumentViewer: File type =', fileType);
+    console.log('DocumentViewer: Is PDF =', isPdf);
+    console.log('DocumentViewer: Is Image =', isImage);
+    
+    // Clear any existing timeout
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      setTimeoutId(null);
+    }
+    
+    // Reset states
+    setError(null);
+    setRetryCount(0);
+    
+    if (isImage) {
+      setViewerType('image');
+      setIsLoading(false);
+    } else if (isPdf) {
+      setViewerType('iframe');
+      setIsLoading(true);
+      // Set a shorter timeout for iframe loading
+      const timeout = setTimeout(() => {
+        console.log('Iframe timeout - switching to Google Viewer');
+        setViewerType('google');
+        setIsLoading(true);
+      }, 3000);
+      setTimeoutId(timeout);
+    } else {
+      setViewerType('google');
+      setIsLoading(true);
+      // Set a timeout for Google Viewer as well
+      const timeout = setTimeout(() => {
+        console.log('Google Viewer timeout - showing error');
+        setViewerType('error');
+        setError('Document preview timed out. Please try downloading the file.');
+        setIsLoading(false);
+      }, 5000);
+      setTimeoutId(timeout);
+    }
+    
+    // Cleanup function
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        setTimeoutId(null);
+      }
+    };
+  }, [url, isImage, isPdf, fileType]);
+
+  const handleIframeError = () => {
+    console.log('Iframe failed, trying Google Viewer');
+    if (retryCount < 2) {
+      setRetryCount(prev => prev + 1);
+      setViewerType('google');
+    } else {
+      setViewerType('error');
+      setError('Unable to preview this document. Please try downloading it.');
+    }
+  };
+
+  const handleGoogleViewerError = () => {
+    console.log('Google Viewer failed, showing error');
+    setViewerType('error');
+    setError('Unable to preview this document type');
+  };
+
+
+  if (isLoading) {
+    return (
+      <div className="h-96 bg-gray-100 rounded flex flex-col items-center justify-center p-8 text-center">
+        <RefreshCw className="h-8 w-8 animate-spin text-gray-400 mb-4" />
+        <p className="text-gray-600 mb-4">Loading document...</p>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <button
+            onClick={() => {
+              setViewerType('error');
+              setIsLoading(false);
+              setError('Preview not available. Please use download options below.');
+            }}
+            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+          >
+            Skip Preview
+          </button>
+          <a 
+            href={url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            View in New Tab
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (viewerType === 'image') {
+    return (
+      <div className="relative h-96 bg-gray-100 rounded overflow-hidden">
+        <img
+          src={url}
+          alt="Document Preview"
+          className="w-full h-full object-contain"
+          onError={() => {
+            setViewerType('error');
+            setError('Failed to load image');
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (viewerType === 'iframe') {
+    // For Cloudinary raw URLs, we need to handle them differently
+    const isCloudinaryRaw = url.includes('cloudinary.com') && url.includes('/raw/upload/');
+    const iframeSrc = isCloudinaryRaw ? url : `${url}#toolbar=1&navpanes=1&scrollbar=1`;
+    
+    return (
+      <div className="relative h-96 bg-gray-100 rounded overflow-hidden">
+        <iframe
+          src={iframeSrc}
+          width="100%"
+          height="100%"
+          className="border-0"
+          title="Document Preview"
+          onError={handleIframeError}
+          onLoad={() => {
+            console.log('Iframe onLoad triggered');
+            setIsLoading(false);
+          }}
+        />
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-white bg-opacity-90 flex flex-col items-center justify-center p-8 text-center">
+            <RefreshCw className="h-8 w-8 animate-spin text-gray-400 mb-4" />
+            <p className="text-gray-600 mb-4">Loading document...</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setViewerType('google');
+                  setIsLoading(true);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Try Google Viewer
+              </button>
+              <button
+                onClick={() => {
+                  setViewerType('error');
+                  setIsLoading(false);
+                  setError('Preview not available. Please use download options.');
+                }}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                Skip Preview
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (viewerType === 'google') {
+    const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+    console.log('Google Viewer URL:', googleViewerUrl);
+    return (
+      <div className="relative h-96 bg-gray-100 rounded overflow-hidden">
+        <iframe
+          src={googleViewerUrl}
+          width="100%"
+          height="100%"
+          className="border-0"
+          title="Google Document Viewer"
+          onError={handleGoogleViewerError}
+          onLoad={() => {
+            console.log('Google Viewer onLoad triggered');
+            setIsLoading(false);
+          }}
+        />
+        {/* Loading state */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-white flex flex-col items-center justify-center p-8 text-center">
+            <RefreshCw className="h-8 w-8 animate-spin text-gray-400 mb-4" />
+            <p className="text-gray-600 mb-4">Loading with Google Viewer...</p>
+            <button
+              onClick={handleGoogleViewerError}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Skip to Download
+            </button>
+          </div>
+        )}
+        {/* Error fallback */}
+        <div 
+          className="absolute inset-0 bg-white flex flex-col items-center justify-center p-8 text-center"
+          style={{ display: 'none' }}
+        >
+          <AlertTriangle className="h-12 w-12 text-yellow-500 mb-4" />
+          <p className="text-gray-600 mb-4">Google Viewer not available</p>
+          <div className="flex gap-2">
+            <a 
+              href={url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              View in New Tab
+            </a>
+            <a 
+              href={url} 
+              download
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              Download
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  return (
+    <div className="h-96 bg-gray-100 rounded flex flex-col items-center justify-center p-8 text-center">
+      <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
+      <p className="text-gray-600 mb-4">{error || 'Unable to preview this document'}</p>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <a 
+          href={url} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          View in New Tab
+        </a>
+        <a 
+          href={url} 
+          download
+          className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Download
+        </a>
+      </div>
+    </div>
+  );
+};
+
 export const VerificationPanel: React.FC = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [selectedShop, setSelectedShop] = useState<Shop | null>(null);
   const [verificationNotes, setVerificationNotes] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState<string | null>(null);
@@ -31,7 +303,7 @@ export const VerificationPanel: React.FC = () => {
           status: shop.verificationStatus,
           verificationStatus: shop.verificationStatus,
           registrationDate: new Date(shop.createdAt).toLocaleDateString(),
-          licenseDocument: shop.licenseDocument?.url,
+          licenseDocument: shop.licenseDocument,
           licenseNumber: shop.licenseNumber,
           phone: shop.phone,
           state: shop.state,
@@ -219,9 +491,21 @@ export const VerificationPanel: React.FC = () => {
       </div>
 
       {selectedShop && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4">
-            <h4 className="text-lg font-semibold text-gray-800 mb-4">Shop Details - {selectedShop.name}</h4>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h4 className="text-lg font-semibold text-gray-800">Shop Details - {selectedShop.name}</h4>
+                <button
+                  onClick={() => {
+                    setSelectedShop(null);
+                    setVerificationNotes('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle className="h-6 w-6" />
+                </button>
+              </div>
             
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
@@ -280,23 +564,72 @@ export const VerificationPanel: React.FC = () => {
               )}
             </div>
 
-            {selectedShop.licenseDocument && (
+            {selectedShop.licenseDocument && selectedShop.licenseDocument.url && (
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Business License</label>
-                <div className="border border-gray-200 rounded-lg p-4 flex items-center justify-between">
-                  <div className="flex-1">
-                    <span className="text-sm text-gray-600 block">License Document</span>
-                    <span className="text-xs text-gray-500">Click to view/download</span>
+                <label className="block text-sm font-medium text-gray-700 mb-3">Business License</label>
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600 block">License Document</span>
+                        {selectedShop.licenseDocument.mimeType && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {selectedShop.licenseDocument.mimeType.split('/')[1]?.toUpperCase() || 'FILE'}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500">Click to view/download</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <a 
+                        href={selectedShop.licenseDocument.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center text-blue-600 hover:text-blue-700 px-3 py-2 rounded border border-blue-200 hover:bg-blue-50 transition-colors"
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download (Cloudinary)
+                      </a>
+                      {selectedShop.licenseDocument.localPath && (
+                        <a 
+                          href={`/api/upload/local/${selectedShop.licenseDocument.localPath.split('/')[1]}/${selectedShop.licenseDocument.localFilename}`}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center text-orange-600 hover:text-orange-700 px-3 py-2 rounded border border-orange-200 hover:bg-orange-50 transition-colors"
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Download (Local)
+                        </a>
+                      )}
+                      <button
+                        onClick={() => selectedShop.licenseDocument && window.open(selectedShop.licenseDocument.url, '_blank')}
+                        className="flex items-center text-green-600 hover:text-green-700 px-3 py-2 rounded border border-green-200 hover:bg-green-50 transition-colors"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View in New Tab
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (selectedShop.licenseDocument && selectedShop.licenseDocument.url) {
+                            const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(selectedShop.licenseDocument.url)}&embedded=true`;
+                            window.open(googleViewerUrl, '_blank');
+                          }
+                        }}
+                        className="flex items-center text-purple-600 hover:text-purple-700 px-3 py-2 rounded border border-purple-200 hover:bg-purple-50 transition-colors"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Google Viewer
+                      </button>
+                    </div>
                   </div>
-                  <a 
-                    href={selectedShop.licenseDocument} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center text-blue-600 hover:text-blue-700"
-                  >
-                    <Download className="h-4 w-4 mr-1" />
-                    View/Download
-                  </a>
+                  
+                  {/* Universal Document Preview */}
+                  <div className="mt-4">
+                    <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-3">Document Preview:</p>
+                      <DocumentViewer url={selectedShop.licenseDocument.url} />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -317,54 +650,59 @@ export const VerificationPanel: React.FC = () => {
               </div>
             )}
 
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setSelectedShop(null);
-                  setVerificationNotes('');
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                Close
-              </button>
-              {selectedShop.verificationStatus === 'pending' && (
-                <>
-                  <button
-                    onClick={() => handleVerification(selectedShop.id, 'rejected')}
-                    disabled={verifying === selectedShop.id}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                  >
-                    {verifying === selectedShop.id ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        <span>Processing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="h-4 w-4" />
-                        <span>Reject</span>
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => handleVerification(selectedShop.id, 'approved')}
-                    disabled={verifying === selectedShop.id}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                  >
-                    {verifying === selectedShop.id ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 animate-spin" />
-                        <span>Processing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-4 w-4" />
-                        <span>Approve</span>
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
+            </div>
+            
+            {/* Fixed Footer with Action Buttons */}
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 -mx-6 -mb-6 rounded-b-xl">
+              <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+                <button
+                  onClick={() => {
+                    setSelectedShop(null);
+                    setVerificationNotes('');
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+                {selectedShop.verificationStatus === 'pending' && (
+                  <>
+                    <button
+                      onClick={() => handleVerification(selectedShop.id, 'rejected')}
+                      disabled={verifying === selectedShop.id}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 transition-colors"
+                    >
+                      {verifying === selectedShop.id ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-4 w-4" />
+                          <span>Reject</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleVerification(selectedShop.id, 'approved')}
+                      disabled={verifying === selectedShop.id}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 transition-colors"
+                    >
+                      {verifying === selectedShop.id ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4" />
+                          <span>Approve</span>
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

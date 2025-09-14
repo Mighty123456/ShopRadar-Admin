@@ -82,10 +82,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) =
 
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" key="logout-modal">
-          <div className="absolute inset-0 bg-black/40" onClick={() => {
-            console.log('Modal backdrop clicked');
-            setShowConfirm(false);
-          }}></div>
+          <div 
+            className="absolute inset-0 bg-black/40" 
+            onClick={() => {
+              console.log('Modal backdrop clicked');
+              setShowConfirm(false);
+            }}
+          ></div>
           <div className="relative z-10 w-[92%] max-w-sm rounded-xl bg-white p-6 shadow-xl border border-gray-200">
             <div className="flex items-center mb-4">
               <div className="w-10 h-10 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center mr-3">

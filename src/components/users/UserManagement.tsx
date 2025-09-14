@@ -65,7 +65,14 @@ export const UserManagement: React.FC = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+    const user = users.find(u => u.id === userId);
+    const isShopkeeper = user?.type === 'shopkeeper';
+    
+    const warningMessage = isShopkeeper 
+      ? `⚠️ WARNING: You are about to permanently delete a shopkeeper and ALL their related data:\n\n• User account\n• Shop profile\n• All products\n• All offers\n• All reviews\n• All activities\n\nThis action CANNOT be undone!\n\nAre you absolutely sure you want to continue?`
+      : `⚠️ WARNING: You are about to permanently delete this user and ALL their related data:\n\n• User account\n• All reviews written by this user\n• All activities\n\nThis action CANNOT be undone!\n\nAre you absolutely sure you want to continue?`;
+
+    if (!window.confirm(warningMessage)) {
       return;
     }
 
@@ -73,6 +80,25 @@ export const UserManagement: React.FC = () => {
       const result = await apiService.deleteUser(userId);
       
       if (result.success) {
+        // Show success message with details of what was deleted
+        const deletedItems = result.deletedItems;
+        let successMessage = 'User deleted successfully!';
+        
+        if (deletedItems) {
+          const details = [];
+          if (deletedItems.shop) details.push('Shop');
+          if (deletedItems.products > 0) details.push(`${deletedItems.products} products`);
+          if (deletedItems.offers > 0) details.push(`${deletedItems.offers} offers`);
+          if (deletedItems.reviews > 0) details.push(`${deletedItems.reviews} reviews`);
+          if (deletedItems.activities > 0) details.push(`${deletedItems.activities} activities`);
+          
+          if (details.length > 0) {
+            successMessage += `\n\nAlso deleted: ${details.join(', ')}`;
+          }
+        }
+        
+        alert(successMessage);
+        
         // Reload users to get updated data
         await loadUsers();
       } else {

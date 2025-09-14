@@ -334,9 +334,10 @@ class ApiService {
     });
 
     const data = await response.json();
+    console.log('Product API Response:', data);
     
     if (response.ok) {
-      return { success: true, data: data.data };
+      return { success: true, data: data.data.product }; // data.data.product contains the actual product
     }
     
     return { success: false, message: data.message || 'Failed to fetch product' };
@@ -575,9 +576,10 @@ class ApiService {
     });
 
     const data = await response.json();
+    console.log('Offer API Response:', data);
     
     if (response.ok) {
-      return { success: true, data: data.data };
+      return { success: true, data: data.data }; // data.data contains the offer
     }
     
     return { success: false, message: data.message || 'Failed to fetch offer' };

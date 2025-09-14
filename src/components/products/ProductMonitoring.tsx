@@ -14,6 +14,8 @@ export const ProductMonitoring: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalOffers, setTotalOffers] = useState(0);
+  const [selectedItem, setSelectedItem] = useState<Product | Offer | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [filters, setFilters] = useState({
     category: 'all',
     status: 'all',
@@ -126,6 +128,34 @@ export const ProductMonitoring: React.FC = () => {
       [filterType]: value
     }));
     setCurrentPage(1);
+  };
+
+  const handleViewDetails = async (itemId: string, type: 'product' | 'offer') => {
+    try {
+      setLoading(true);
+      let result;
+      
+      if (type === 'product') {
+        result = await apiService.getProductById(itemId);
+      } else {
+        result = await apiService.getOfferById(itemId);
+      }
+      
+      if (result.success) {
+        console.log('API Response:', result);
+        console.log('Item Data:', result.data);
+        console.log('Type:', type);
+        setSelectedItem(result.data);
+        setShowDetailsModal(true);
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      setError(`Failed to load ${type} details`);
+      console.error(`Error loading ${type} details:`, err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -293,7 +323,11 @@ export const ProductMonitoring: React.FC = () => {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex space-x-2">
-                            <button className="p-1 text-blue-600 hover:text-blue-700" title="View Details">
+                            <button 
+                              onClick={() => handleViewDetails(product.id, 'product')}
+                              className="p-1 text-blue-600 hover:text-blue-700" 
+                              title="View Details"
+                            >
                               <Eye className="h-4 w-4" />
                             </button>
                             {product.status === 'active' ? (
@@ -366,7 +400,11 @@ export const ProductMonitoring: React.FC = () => {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex space-x-2">
-                            <button className="p-1 text-blue-600 hover:text-blue-700" title="View Details">
+                            <button 
+                              onClick={() => handleViewDetails(offer._id, 'offer')}
+                              className="p-1 text-blue-600 hover:text-blue-700" 
+                              title="View Details"
+                            >
                               <Eye className="h-4 w-4" />
                             </button>
                             {offer.status === 'active' ? (
@@ -423,6 +461,150 @@ export const ProductMonitoring: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Details Modal */}
+      {showDetailsModal && selectedItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {activeTab === 'products' ? 'Product Details' : 'Offer Details'}
+                </h3>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {activeTab === 'products' ? (
+                  <div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Product Name</label>
+                        <p className="text-gray-800">{(selectedItem as Product).name || 'Unknown'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Category</label>
+                        <p className="text-gray-800">{(selectedItem as Product).category || 'Unknown'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Price</label>
+                        <p className="text-gray-800">₹{(selectedItem as Product).price || 0}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Status</label>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          (selectedItem as Product).status === 'active' 
+                            ? 'bg-green-100 text-green-800'
+                            : (selectedItem as Product).status === 'flagged'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : (selectedItem as Product).status === 'removed'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {(selectedItem as Product).status ? (selectedItem as Product).status.charAt(0).toUpperCase() + (selectedItem as Product).status.slice(1) : 'Unknown'}
+                        </span>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Report Count</label>
+                        <p className="text-gray-800">{(selectedItem as Product).reportCount || 0}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Added Date</label>
+                        <p className="text-gray-800">{(selectedItem as Product).addedDate}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <label className="text-sm font-medium text-gray-600">Description</label>
+                      <p className="text-gray-800 mt-1">{(selectedItem as Product).description || 'No description available'}</p>
+                    </div>
+                    <div className="mt-4">
+                      <label className="text-sm font-medium text-gray-600">Shop</label>
+                      <p className="text-gray-800">
+                        {typeof (selectedItem as Product).shop === 'string' 
+                          ? (selectedItem as Product).shop 
+                          : (selectedItem as Product).shop && typeof (selectedItem as Product).shop === 'object'
+                          ? ((selectedItem as Product).shop as any).shopName || ((selectedItem as Product).shop as any).name || 'Unknown Shop'
+                          : 'Unknown Shop'}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Offer Title</label>
+                        <p className="text-gray-800">{(selectedItem as Offer).title || 'Untitled Offer'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Status</label>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          (selectedItem as Offer).status === 'active' 
+                            ? 'bg-green-100 text-green-800'
+                            : (selectedItem as Offer).status === 'inactive'
+                            ? 'bg-gray-100 text-gray-800'
+                            : (selectedItem as Offer).status === 'suspended'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {(selectedItem as Offer).status ? (selectedItem as Offer).status.charAt(0).toUpperCase() + (selectedItem as Offer).status.slice(1) : 'Unknown'}
+                        </span>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Discount</label>
+                        <p className="text-gray-800">
+                          {(selectedItem as Offer).discountType === 'Percentage' 
+                            ? `${(selectedItem as Offer).discountValue || 0}%` 
+                            : `₹${(selectedItem as Offer).discountValue || 0}`}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Usage</label>
+                        <p className="text-gray-800">
+                          {(selectedItem as Offer).currentUses || 0}/{(selectedItem as Offer).maxUses || 0}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Product</label>
+                        <p className="text-gray-800">
+                          {(selectedItem as Offer).productId?.name || 'Unknown Product'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Shop</label>
+                        <p className="text-gray-800">
+                          {(selectedItem as Offer).shopId?.shopName || (selectedItem as Offer).shopId?.name || 'Unknown Shop'}
+                        </p>
+                      </div>
+                    </div>
+                    {(selectedItem as Offer).description && (
+                      <div className="mt-4">
+                        <label className="text-sm font-medium text-gray-600">Description</label>
+                        <p className="text-gray-800 mt-1">{(selectedItem as Offer).description}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

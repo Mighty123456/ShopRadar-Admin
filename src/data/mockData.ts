@@ -41,7 +41,14 @@ export const mockShops: Shop[] = [
     status: 'approved',
     verificationStatus: 'approved',
     registrationDate: '2024-01-10',
-    licenseDocument: 'license-001.pdf',
+    licenseDocument: {
+      url: 'https://res.cloudinary.com/example/raw/upload/v1234567890/shop-docs/license-001.pdf',
+      publicId: 'shop-docs/license-001',
+      mimeType: 'application/pdf',
+      localPath: 'uploads/shop-docs/license-001_1704873600000.pdf',
+      localFilename: 'license-001_1704873600000.pdf',
+      uploadedAt: '2024-01-10T10:00:00Z'
+    },
     licenseNumber: 'MAH/SHOP/2024/001',
     phone: '9876543210',
     state: 'Maharashtra',
