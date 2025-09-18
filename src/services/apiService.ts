@@ -359,8 +359,9 @@ class ApiService {
     return { success: false, message: data.message || 'Failed to update product status' };
   }
 
-  async getProductStats() {
-    const response = await fetch(`${API_BASE_URL}/products/admin/stats`, {
+  async getProductStats(shopId?: string) {
+    const url = shopId ? `${API_BASE_URL}/products/admin/stats?shopId=${encodeURIComponent(shopId)}` : `${API_BASE_URL}/products/admin/stats`;
+    const response = await fetch(url, {
       headers: this.getAuthHeaders(),
     });
 
@@ -601,8 +602,9 @@ class ApiService {
     return { success: false, message: data.message || 'Failed to update offer status' };
   }
 
-  async getOfferStats() {
-    const response = await fetch(`${API_BASE_URL}/offers/admin/stats`, {
+  async getOfferStats(shopId?: string) {
+    const url = shopId ? `${API_BASE_URL}/offers/admin/stats?shopId=${encodeURIComponent(shopId)}` : `${API_BASE_URL}/offers/admin/stats`;
+    const response = await fetch(url, {
       headers: this.getAuthHeaders(),
     });
 

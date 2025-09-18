@@ -9,6 +9,7 @@ interface StatsData {
   recentRegistrations: number;
   activeUsers?: number;
   totalProducts?: number;
+  totalOffers?: number;
   totalUsers?: number;
 }
 
@@ -24,6 +25,8 @@ export const useRealTimeStats = () => {
       switch (statsType) {
         case 'product_count':
           return { ...prevStats, totalProducts: data.totalProducts };
+        case 'offer_count':
+          return { ...prevStats, totalOffers: data.totalOffers };
         case 'shop_count':
           return { ...prevStats, totalShops: data.totalShops };
         case 'user_count':

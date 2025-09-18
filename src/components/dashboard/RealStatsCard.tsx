@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Store, Package, AlertTriangle, Star, UserCheck } from 'lucide-react';
+import { Users, Store, Package, AlertTriangle, Star, UserCheck, Tag } from 'lucide-react';
 import apiService from '../../services/apiService';
 import { useRealTimeStats } from '../../hooks/useRealTimeStats';
 
@@ -12,6 +12,8 @@ interface StatsData {
   liveShops: number;
   recentRegistrations: number;
   activeUsers?: number;
+  totalProducts?: number;
+  totalOffers?: number;
 }
 
 export const RealStatsCard: React.FC = () => {
@@ -26,15 +28,19 @@ export const RealStatsCard: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const [shopStatsResult, userStatsResult] = await Promise.all([
+      const [shopStatsResult, userStatsResult, productStatsResult, offerStatsResult] = await Promise.all([
         apiService.getShopStats(),
-        apiService.getUserStats()
+        apiService.getUserStats(),
+        apiService.getProductStats(),
+        apiService.getOfferStats()
       ]);
       
-      if (shopStatsResult.success && userStatsResult.success) {
+      if (shopStatsResult.success && userStatsResult.success && productStatsResult.success && offerStatsResult.success) {
         setStats({
           ...shopStatsResult.stats,
-          activeUsers: userStatsResult.stats.totalUsers
+          activeUsers: userStatsResult.stats.totalUsers,
+          totalProducts: productStatsResult.data.totalProducts,
+          totalOffers: offerStatsResult.data.totalOffers
         });
       } else {
         setError('Failed to load statistics');
@@ -145,6 +151,16 @@ export const RealStatsCard: React.FC = () => {
       bgColor: 'bg-orange-50',
       textColor: 'text-orange-600',
       iconColor: 'text-orange-500',
+      isRealTime: true
+    },
+    {
+      title: 'Total Offers',
+      value: stats.totalOffers || 0,
+      icon: Tag,
+      color: 'rose',
+      bgColor: 'bg-rose-50',
+      textColor: 'text-rose-600',
+      iconColor: 'text-rose-500',
       isRealTime: true
     },
     {
