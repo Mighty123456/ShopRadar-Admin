@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../../services/apiService';
 import { ArrowLeft, Mail, Lock, Eye, EyeOff, Key } from 'lucide-react';
 
 interface ForgotPasswordProps {
@@ -25,7 +26,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBackToLogin })
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:3000/api/admin/forgot-password', {
+      const response = await fetch(`${API_BASE_URL}/admin/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -60,7 +61,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBackToLogin })
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:3000/api/admin/verify-otp', {
+      const response = await fetch(`${API_BASE_URL}/admin/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +103,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBackToLogin })
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:3000/api/admin/reset-password', {
+      const response = await fetch(`${API_BASE_URL}/admin/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

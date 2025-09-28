@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import { API_BASE_URL } from './apiService';
 
 interface Activity {
   id: string;
@@ -34,9 +35,10 @@ class WebSocketService {
       return;
     }
 
-    const API_BASE_URL = 'https://shopradarbackend.onrender.com';
+    // Derive WebSocket origin from API_BASE_URL (drop trailing /api if present)
+    const origin = API_BASE_URL.endsWith('/api') ? API_BASE_URL.slice(0, -4) : API_BASE_URL;
     
-    this.socket = io(API_BASE_URL, {
+    this.socket = io(origin, {
       auth: {
         token: token
       },
